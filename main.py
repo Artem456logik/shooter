@@ -7,7 +7,8 @@ WIDTH = 800
 HEIGHT = 500
 SIZE = (WIDTH, HEIGHT)
 FPS = 60
-
+lost = 0 
+score = 1
 win = pygame.display.set_mode((800,500))
 clock = pygame.time.Clock()
 background = pygame.transform.scale(
@@ -19,6 +20,8 @@ pygame.mixer.init()
 pygame.mixer.music.load("space.ogg")
 pygame.mixer.music.play()
 
+bullets = pygame.sprite.Group()
+fire_sound = pygame.mixer.Sound("fire.ogg")
 
 
 class GameSprite(pygame.sprite.Sprite):
@@ -41,8 +44,11 @@ class Player(GameSprite):
             self.rect.x += self.speed
         if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and self.rect.x > 0:
             self.rect.x -= self.speed
+
     def fire(self):
-        pass
+        new_bullet = Bullet("bullet.png", (15,20), (self.rect.centerx, self.rect.top), 11)
+        bullets.add(new_bullet)
+        fire_sound.play()
 
 class Enemy(GameSprite):
     def update(self):   
@@ -50,10 +56,30 @@ class Enemy(GameSprite):
         if self.rect.top > HEIGHT:
             self.rect.y = 0
             self.rect.x = random.randint(self.rect.width, WIDTH-self.rect.width)
-        
+            global lost
+            lost += 1
+
+class Bullet(GameSprite):
+    def update(self):
+        self.rect.y -= self.speed
+        if self.rect.bottom < 0:
+            self.kill()
+            
+pygame.font.init()
+medium_font = pygame.font.SysFont("Helvetica", 24)
+
+lost_text = medium_font.render("Пропущено" + str(lost), True, (255,255,255))
+score_text = medium_font.render("Збито" + str(score), True, (255,255,255))
 
 player = Player("rocket.png", (50,70), (HEIGHT-75,WIDTH//2),10)
-test_enemy = Enemy("ufo.png", (70,50), (random.randint(70,WIDTH-70), 0), 8)
+
+enemis = pygame.sprite.Group()
+enemis_num = 3
+
+for i in range(enemis_num):
+    new_enemy = Enemy("ufo.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+    enemis.add(new_enemy)
+
 
 game = True
 finish = False
@@ -61,12 +87,21 @@ while game:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             game = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.fire()
     if not finish:
         win.blit(background, (0,0))
         player.reset(win)
         player.update()
-        test_enemy.reset(win)
-        test_enemy.update()
+        lost_text = medium_font.render("Пропущено" + str(lost), True, (255,255,255))
+        win.blit(lost_text, (25,25))
+        score_text = medium_font.render("Збито" + str(score), True, (255,255,255))
+        win.blit(score_text, (25,50))
+        bullets.draw(win)
+        bullets.update()
+        enemis.draw(win)
+        enemis.update()
 
 
 
