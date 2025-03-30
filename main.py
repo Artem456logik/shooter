@@ -8,7 +8,8 @@ HEIGHT = 500
 SIZE = (WIDTH, HEIGHT)
 FPS = 60
 lost = 0 
-score = 1
+score = 0
+lives = 3
 win = pygame.display.set_mode((800,500))
 clock = pygame.time.Clock()
 background = pygame.transform.scale(
@@ -77,7 +78,11 @@ enemis = pygame.sprite.Group()
 enemis_num = 3
 
 for i in range(enemis_num):
-    new_enemy = Enemy("ufo.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+    n = random.randint(1,100)
+    if n > 50:
+        new_enemy = Enemy("ufo.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+    else:
+        new_enemy = Enemy("asteroid.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
     enemis.add(new_enemy)
 
 
@@ -102,8 +107,42 @@ while game:
         bullets.update()
         enemis.draw(win)
         enemis.update()
+        lives_text = medium_font.render("Життя" + str(lives), True, (255,255,0))
+        win.blit(lives_text, (WIDTH-100,0))
 
+        collided = pygame.sprite.groupcollide(enemis, bullets, True, True)
+        for dead_enemy in collided:
+            score += 1
+            n = random.randint(1,100)
+            if n > 50:
+                new_enemy = Enemy("ufo.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+            else:
+                new_enemy = Enemy("asteroid.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+            enemis.add(new_enemy)
+        if score >= 51:
+            finish = True
+            font1 = pygame.font.Font(None, 48)
+            text = font1.render("YOU WON", True, (0,255,0))
+            win.blit(text, (WIDTH//2 - 100,HEIGHT//2)) 
+        if lost >= 11:
+            finish = True
+            font1 = pygame.font.Font(None, 48)
+            text = font1.render("YOU LOSE", True, (255,0,0))
+            win.blit(text, (WIDTH//2 - 100,HEIGHT//2)) 
 
-
+        collided = pygame.sprite.spritecollide(player, enemis, True)
+        for enemy in collided:
+            lives -= 1 
+            n = random.randint(1,100)
+            if n > 50:
+                new_enemy = Enemy("ufo.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+            else:
+                new_enemy = Enemy("asteroid.png", (70,50), (random.randint(50, WIDTH-50), 0), random.randint(1,3))
+            enemis.add(new_enemy)
+        if lives == 0:
+            finish = True
+            font1 = pygame.font.Font(None, 48)
+            text = font1.render("YOU LOSE", True, (255,0,0))
+            win.blit(text, (WIDTH//2 - 100,HEIGHT//2))
     pygame.display.update()
     clock.tick(60)
